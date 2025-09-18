@@ -23,6 +23,7 @@ var ProviderSet = wire.NewSet(
 	NewSafeRepo,
 	NewSettingRepo,
 	NewSSHRepo,
+	NewSystemdMonitorRepo,
 	NewTaskRepo,
 	NewUserRepo,
 	NewUserTokenRepo,

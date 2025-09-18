@@ -116,6 +116,8 @@ func initWeb() (*app.Web, error) {
 	monitorService := service.NewMonitorService(settingRepo, monitorRepo)
 	settingService := service.NewSettingService(settingRepo)
 	systemctlService := service.NewSystemctlService(locale)
+	systemdMonitorRepo := data.NewSystemdMonitorRepo(db, logger, locale)
+	systemdMonitorService := service.NewSystemdMonitorService(locale, systemdMonitorRepo)
 	toolboxSystemService := service.NewToolboxSystemService(locale)
 	toolboxBenchmarkService := service.NewToolboxBenchmarkService(locale)
 	codeserverApp := codeserver.NewApp()
@@ -142,7 +144,7 @@ func initWeb() (*app.Web, error) {
 	s3fsApp := s3fs.NewApp(locale)
 	supervisorApp := supervisor.NewApp(locale)
 	loader := bootstrap.NewLoader(codeserverApp, dockerApp, fail2banApp, frpApp, giteaApp, memcachedApp, minioApp, mysqlApp, nginxApp, php74App, php80App, php81App, php82App, php83App, php84App, phpmyadminApp, podmanApp, postgresqlApp, pureftpdApp, redisApp, rsyncApp, s3fsApp, supervisorApp)
-	http := route.NewHttp(userService, userTokenService, dashboardService, taskService, websiteService, databaseService, databaseServerService, databaseUserService, backupService, certService, certDNSService, certAccountService, appService, cronService, processService, safeService, firewallService, sshService, containerService, containerComposeService, containerNetworkService, containerImageService, containerVolumeService, fileService, monitorService, settingService, systemctlService, toolboxSystemService, toolboxBenchmarkService, loader)
+	http := route.NewHttp(userService, userTokenService, dashboardService, taskService, websiteService, databaseService, databaseServerService, databaseUserService, backupService, certService, certDNSService, certAccountService, appService, cronService, processService, safeService, firewallService, sshService, containerService, containerComposeService, containerNetworkService, containerImageService, containerVolumeService, fileService, monitorService, settingService, systemctlService, systemdMonitorService, toolboxSystemService, toolboxBenchmarkService, loader)
 	wsService := service.NewWsService(locale, koanf, sshRepo)
 	ws := route.NewWs(wsService)
 	mux, err := bootstrap.NewRouter(locale, middlewares, http, ws)
@@ -154,7 +156,7 @@ func initWeb() (*app.Web, error) {
 		return nil, err
 	}
 	gormigrate := bootstrap.NewMigrate(db)
-	jobs := job.NewJobs(db, logger, settingRepo, certRepo, backupRepo, cacheRepo, taskRepo)
+	jobs := job.NewJobs(db, logger, settingRepo, certRepo, backupRepo, cacheRepo, taskRepo, systemdMonitorRepo)
 	cron, err := bootstrap.NewCron(koanf, logger, jobs)
 	if err != nil {
 		return nil, err

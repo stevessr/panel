@@ -42,6 +42,7 @@ type Http struct {
 	monitor          *service.MonitorService
 	setting          *service.SettingService
 	systemctl        *service.SystemctlService
+	systemdMonitor   *service.SystemdMonitorService
 	toolboxSystem    *service.ToolboxSystemService
 	toolboxBenchmark *service.ToolboxBenchmarkService
 	apps             *apploader.Loader
@@ -75,6 +76,7 @@ func NewHttp(
 	monitor *service.MonitorService,
 	setting *service.SettingService,
 	systemctl *service.SystemctlService,
+	systemdMonitor *service.SystemdMonitorService,
 	toolboxSystem *service.ToolboxSystemService,
 	toolboxBenchmark *service.ToolboxBenchmarkService,
 	apps *apploader.Loader,
@@ -107,6 +109,7 @@ func NewHttp(
 		monitor:          monitor,
 		setting:          setting,
 		systemctl:        systemctl,
+		systemdMonitor:   systemdMonitor,
 		toolboxSystem:    toolboxSystem,
 		toolboxBenchmark: toolboxBenchmark,
 		apps:             apps,
@@ -385,6 +388,18 @@ func (route *Http) Register(r *chi.Mux) {
 			r.Post("/reload", route.systemctl.Reload)
 			r.Post("/start", route.systemctl.Start)
 			r.Post("/stop", route.systemctl.Stop)
+		})
+
+		r.Route("/systemd_monitor", func(r chi.Router) {
+			r.Get("/configs", route.systemdMonitor.GetAllConfigs)
+			r.Get("/configs/{app_slug}", route.systemdMonitor.GetConfigs)
+			r.Post("/configs", route.systemdMonitor.AddConfig)
+			r.Put("/configs", route.systemdMonitor.UpdateConfig)
+			r.Delete("/configs", route.systemdMonitor.RemoveConfig)
+			r.Get("/items", route.systemdMonitor.GetAllMonitorItems)
+			r.Get("/items/{app_slug}", route.systemdMonitor.GetMonitorItems)
+			r.Post("/check", route.systemdMonitor.CheckServiceStatus)
+			r.Post("/check_all", route.systemdMonitor.CheckAllServices)
 		})
 
 		r.Route("/toolbox_system", func(r chi.Router) {

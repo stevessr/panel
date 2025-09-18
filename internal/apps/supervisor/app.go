@@ -35,6 +35,36 @@ func NewApp(t *gotext.Locale) *App {
 	}
 }
 
+// GetSystemdServices 返回需要监控的 systemd 服务列表（用于API）
+func (s *App) GetSystemdServices(w http.ResponseWriter, r *http.Request) {
+	services := []SystemdServiceInfo{
+		{
+			Name:     s.name, // supervisord 或 supervisor
+			Priority: 8,      // 较高优先级
+			Enabled:  true,
+		},
+	}
+	service.Success(w, services)
+}
+
+// GetSystemdServicesList 返回需要监控的 systemd 服务列表（用于配置）
+func (s *App) GetSystemdServicesList() []SystemdServiceInfo {
+	return []SystemdServiceInfo{
+		{
+			Name:     s.name, // supervisord 或 supervisor
+			Priority: 8,      // 较高优先级
+			Enabled:  true,
+		},
+	}
+}
+
+// SystemdServiceInfo systemd 服务信息
+type SystemdServiceInfo struct {
+	Name     string // 服务名称
+	Priority int    // 优先级（数字越大优先级越高）
+	Enabled  bool   // 是否启用监控
+}
+
 func (s *App) Route(r chi.Router) {
 	r.Get("/service", s.Service)
 	r.Post("/clear_log", s.ClearLog)
@@ -50,6 +80,7 @@ func (s *App) Route(r chi.Router) {
 	r.Post("/processes/{process}", s.UpdateProcessConfig)
 	r.Delete("/processes/{process}", s.DeleteProcess)
 	r.Post("/processes", s.CreateProcess)
+	r.Get("/systemd_services", s.GetSystemdServices)
 }
 
 // Service 获取服务名称
