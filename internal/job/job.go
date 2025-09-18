@@ -13,24 +13,26 @@ import (
 var ProviderSet = wire.NewSet(NewJobs)
 
 type Jobs struct {
-	db      *gorm.DB
-	log     *slog.Logger
-	setting biz.SettingRepo
-	cert    biz.CertRepo
-	backup  biz.BackupRepo
-	cache   biz.CacheRepo
-	task    biz.TaskRepo
+	db                  *gorm.DB
+	log                 *slog.Logger
+	setting             biz.SettingRepo
+	cert                biz.CertRepo
+	backup              biz.BackupRepo
+	cache               biz.CacheRepo
+	task                biz.TaskRepo
+	systemdMonitorRepo biz.SystemdMonitorRepo
 }
 
-func NewJobs(db *gorm.DB, log *slog.Logger, setting biz.SettingRepo, cert biz.CertRepo, backup biz.BackupRepo, cache biz.CacheRepo, task biz.TaskRepo) *Jobs {
+func NewJobs(db *gorm.DB, log *slog.Logger, setting biz.SettingRepo, cert biz.CertRepo, backup biz.BackupRepo, cache biz.CacheRepo, task biz.TaskRepo, systemdMonitorRepo biz.SystemdMonitorRepo) *Jobs {
 	return &Jobs{
-		db:      db,
-		log:     log,
-		setting: setting,
-		cert:    cert,
-		backup:  backup,
-		cache:   cache,
-		task:    task,
+		db:                  db,
+		log:                 log,
+		setting:             setting,
+		cert:                cert,
+		backup:              backup,
+		cache:               cache,
+		task:                task,
+		systemdMonitorRepo: systemdMonitorRepo,
 	}
 }
 
@@ -43,6 +45,11 @@ func (r *Jobs) Register(c *cron.Cron) error {
 	}
 
 	if _, err := c.AddJob("0 2 * * *", NewPanelTask(r.db, r.log, r.backup, r.cache, r.task, r.setting)); err != nil {
+		return err
+	}
+
+	// 每5分钟检查一次 systemd 服务状态
+	if _, err := c.AddJob("*/5 * * * *", NewSystemdMonitoring(r.log, r.systemdMonitorRepo, r.setting)); err != nil {
 		return err
 	}
 

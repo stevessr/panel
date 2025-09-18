@@ -30,12 +30,43 @@ func NewApp(t *gotext.Locale) *App {
 	}
 }
 
+// GetSystemdServices 返回需要监控的 systemd 服务列表（用于API）
+func (s *App) GetSystemdServices(w http.ResponseWriter, r *http.Request) {
+	services := []SystemdServiceInfo{
+		{
+			Name:     "nginx",
+			Priority: 10, // 高优先级
+			Enabled:  true,
+		},
+	}
+	service.Success(w, services)
+}
+
+// GetSystemdServicesList 返回需要监控的 systemd 服务列表（用于配置）
+func (s *App) GetSystemdServicesList() []SystemdServiceInfo {
+	return []SystemdServiceInfo{
+		{
+			Name:     "nginx",
+			Priority: 10, // 高优先级
+			Enabled:  true,
+		},
+	}
+}
+
+// SystemdServiceInfo systemd 服务信息
+type SystemdServiceInfo struct {
+	Name     string // 服务名称
+	Priority int    // 优先级（数字越大优先级越高）
+	Enabled  bool   // 是否启用监控
+}
+
 func (s *App) Route(r chi.Router) {
 	r.Get("/load", s.Load)
 	r.Get("/config", s.GetConfig)
 	r.Post("/config", s.SaveConfig)
 	r.Get("/error_log", s.ErrorLog)
 	r.Post("/clear_error_log", s.ClearErrorLog)
+	r.Get("/systemd_services", s.GetSystemdServices)
 }
 
 func (s *App) GetConfig(w http.ResponseWriter, r *http.Request) {

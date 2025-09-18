@@ -112,4 +112,19 @@ func init() {
 			return tx.Migrator().DropTable(&biz.UserToken{})
 		},
 	})
+	Migrations = append(Migrations, &gormigrate.Migration{
+		ID: "20250115-systemd-monitor",
+		Migrate: func(tx *gorm.DB) error {
+			return tx.AutoMigrate(
+				&biz.SystemdMonitorConfig{},
+				&biz.SystemdMonitorItem{},
+			)
+		},
+		Rollback: func(tx *gorm.DB) error {
+			return tx.Migrator().DropTable(
+				&biz.SystemdMonitorConfig{},
+				&biz.SystemdMonitorItem{},
+			)
+		},
+	})
 }
